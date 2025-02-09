@@ -12,19 +12,22 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-def show_message(title, message):
-    root = tk.Tk()
-    root.withdraw()
-    root.iconbitmap(resource_path("favicon.ico"))
-    messagebox.showinfo(title, message)
-    root.destroy()
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.withdraw()
+        self.iconbitmap(resource_path("favicon.ico"))
 
-def load_credentials():
+    def show_message(self, title, message):
+        messagebox.showinfo(title, message)
+        self.destroy()
+
+def load_credentials(app):
     script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
     file_path = os.path.join(script_dir, '账号密码.txt')
     
     if not os.path.exists(file_path):
-        show_message("错误", "找不到账号密码.txt文件")
+        app.show_message("错误", "找不到账号密码.txt文件")
         sys.exit(1)
     
     try:
@@ -32,11 +35,11 @@ def load_credentials():
             username = f.readline().strip()
             password = f.readline().strip()
             if not username or not password:
-                show_message("错误", "账号密码文件格式不正确")
+                app.show_message("错误", "账号密码文件格式不正确")
                 sys.exit(1)
             return username, password
     except Exception as e:
-        show_message("错误", f"读取凭证失败: {str(e)}")
+        app.show_message("错误", f"读取凭证失败: {str(e)}")
         sys.exit(1)
 
 def perform_login(username, password):
@@ -86,17 +89,14 @@ def parse_response(response):
     return status_mapping.get(title, ("错误", f"未知响应状态（Title: {title}）"))
 
 def main():
-    root = tk.Tk()
-    root.withdraw()
+    app = App()
     
     try:
-        username, password = load_credentials()
+        username, password = load_credentials(app)
         status, message = perform_login(username, password)
-        show_message(status, message)
+        app.show_message(status, message)
     except Exception as e:
-        show_message("错误", str(e))
-    finally:
-        root.destroy()
+        app.show_message("错误", str(e))
 
 if __name__ == "__main__":
     main()
